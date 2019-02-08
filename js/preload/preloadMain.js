@@ -15,6 +15,7 @@ const { ipcRenderer, remote, crashReporter, webFrame } = require('electron');
 
 const throttle = require('../utils/throttle.js');
 const apiEnums = require('../enums/api.js');
+const keytar = remote.require('keytar');
 const apiCmds = apiEnums.cmds;
 const apiName = apiEnums.apiName;
 const getMediaSources = require('../desktopCapturer/getSources');
@@ -84,6 +85,7 @@ const throttledSetIsInMeetingStatus = throttle(1000, function (isInMeeting) {
  * an event triggered by the main process onload event
  */
 local.ipcRenderer.on('on-page-load', () => {
+
     snackBar = new SnackBar();
 
     // Enable spellchecker only for main window until
@@ -585,6 +587,23 @@ function createAPI() {
             isMenuOpen = !isMenuOpen;
         }
     });
+    window.onload = function() {
+        const secret = keytar.getPassword('Symphony', 'Login');
+        const submitButton = document.querySelector('button[name=signin-submit]');
+        const inputPassword = document.querySelector('input[name=signin-password]');
+        const inputUsername = document.querySelector('input[name=signin-email]');
+        secret.then((value) => {
+            if(value){
+                const credentials = JSON.parse(value);
+                inputUsername.value = credentials.user;
+                inputPassword.value = credentials.password;
+            }
+        });
+    
+        submitButton.addEventListener('click', () => {
+            keytar.setPassword('Symphony', 'Login', JSON.stringify({ user: inputUsername.value, password: inputPassword.value }));
+        });
+    };
 
     window.addEventListener('offline', updateOnlineStatus, false);
     window.addEventListener('online', updateOnlineStatus, false);
