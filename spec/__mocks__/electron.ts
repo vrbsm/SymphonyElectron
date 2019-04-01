@@ -13,11 +13,15 @@ interface IApp {
     getAppPath(): string;
     getPath(type: string): string;
     getName(): string;
-    isReady(): boolean;
     getVersion(): string;
+    isReady(): boolean;
     on(event: any, cb: any): void;
     once(): void;
+    quit(): void;
+    requestSingleInstanceLock(): void;
     setPath(value: string, path: string): void;
+    setAsDefaultProtocolClient(): void;
+    setAboutPanelOptions(): void;
 }
 interface IIpcMain {
     on(event: any, cb: any): void;
@@ -44,6 +48,9 @@ const pathToConfigDir = (): string => {
 
 // electron app mock...
 export const app: IApp = {
+    commandLine: {
+        appendSwitch: jest.fn(),
+    },
     getAppPath: pathToConfigDir,
     getPath: (type) => {
         if (type === 'exe') {
@@ -55,16 +62,17 @@ export const app: IApp = {
         return pathToConfigDir();
     },
     getName: () => appName,
-    isReady: () => isReady,
     getVersion: () => version,
+    isReady: () => isReady,
     on: (event, cb) => {
         ipcEmitter.on(event, cb);
     },
     once: () => jest.fn(),
+    quit: () => jest.fn(),
+    requestSingleInstanceLock: () => jest.fn(),
     setPath: () => jest.fn(),
-    commandLine: {
-        appendSwitch: jest.fn(),
-    },
+    setAsDefaultProtocolClient: () => jest.fn(),
+    setAboutPanelOptions: () => jest.fn(),
 };
 
 // simple ipc mocks for render and main process ipc using
